@@ -19,7 +19,7 @@ if "reactivity_ranks" not in st.session_state:
 if "question_type" not in st.session_state:
     st.session_state.question_type = random.choice(["reducing", "oxidising"])
 
-# Define the MCQ question bank
+# Define the MCQ question bank (Question 3)
 mcq_bank = [
     {
         "question": "When a metal is added to a solution of another metal's nitrate, a displacement reaction occurs if and only if:",
@@ -117,7 +117,6 @@ for m in metals:
 
 st.table(df_table)
 
-
 # ---------------------------
 # Question 1: Rank the Metals
 # ---------------------------
@@ -152,13 +151,35 @@ mcq_answer = st.radio(
 )
 
 # ---------------------------
+# Question 4: Displacement Reaction Equation (MCQ)
+# ---------------------------
+st.subheader("Question 4: Identify the Correct Displacement Reaction Equation")
+st.write("""
+Consider a displacement reaction where a more reactive metal **A** displaces a less reactive metal **B** from its nitrate solution.
+Which of the following is the correctly balanced chemical equation for this reaction?
+""")
+
+# Define the correct equation and generate distractors with common mistakes:
+correct_eq = "A(s) + BNO₃(aq) → ANO₃(aq) + B(s)"
+# Distractor 1: Reaction written in reverse.
+distractor1 = "B(s) + ANO₃(aq) → A(s) + BNO₃(aq)"
+# Distractor 2: Nitrate group attached to the wrong metal in the products.
+distractor2 = "A(s) + BNO₃(aq) → BNO₃(aq) + ANO₃(aq)"
+# Distractor 3: Reactants are both metals (ignoring the nitrate component).
+distractor3 = "A(s) + B(s) → ANO₃(aq) + BNO₃(aq)"
+
+eq_options = [correct_eq, distractor1, distractor2, distractor3]
+random.shuffle(eq_options)
+selected_eq = st.radio("Select the correctly balanced equation:", eq_options, key="eq")
+
+# ---------------------------
 # Submission and Evaluation
 # ---------------------------
 if st.button("Submit Answers"):
     score = 0
     feedback = []
     
-    # Evaluate Ranking
+    # Evaluate Ranking (Question 1)
     if len(set(student_ranking)) < 4:
         feedback.append("Ranking: Please ensure you select a unique metal for each position.")
     else:
@@ -172,7 +193,7 @@ if st.button("Submit Answers"):
             correct_str = ", ".join(correct_ranking)
             feedback.append(f"Ranking: Incorrect. Correct order is: {correct_str}.")
     
-    # Evaluate Reducing / Oxidising Agent Question
+    # Evaluate Reducing / Oxidising Agent (Question 2)
     if question_type == "reducing":
         # The strongest reducing agent is the most reactive (lowest rank number)
         correct_agent = min(metals, key=lambda x: reactivity_ranks[x])
@@ -190,14 +211,21 @@ if st.button("Submit Answers"):
         else:
             feedback.append(f"Oxidising Agent: Incorrect. The strongest oxidising agent is Metal {correct_agent}.")
     
-    # Evaluate MCQ
+    # Evaluate MCQ (Question 3)
     if mcq_answer == selected_mcq["correct"]:
         feedback.append("MCQ: Correct!")
         score += 1
     else:
         feedback.append(f"MCQ: Incorrect. The correct answer is: '{selected_mcq['correct']}'")
     
+    # Evaluate Equation MCQ (Question 4)
+    if selected_eq == correct_eq:
+        feedback.append("Equation: Correct!")
+        score += 1
+    else:
+        feedback.append(f"Equation: Incorrect. The correct equation is:\n\n**{correct_eq}**")
+    
     st.subheader("Results")
     for msg in feedback:
         st.write(msg)
-    st.write(f"Total Score: {score} out of 3")
+    st.write(f"Total Score: {score} out of 4")
