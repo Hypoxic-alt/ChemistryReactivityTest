@@ -28,10 +28,14 @@ for row in metals:
                 row_vals.append("No Reaction")
     table_data[row] = row_vals
 
-# Create DataFrame with first column as "Metal"
+# Create DataFrame with first column as "Metal" and subsequent columns as "Metal A NO₃", "Metal B NO₃", etc.
 df_table = pd.DataFrame(table_data, index=metals)
 df_table.reset_index(inplace=True)
 df_table.rename(columns={"index": "Metal"}, inplace=True)
+
+# Rename the other columns to include "NO₃"
+for m in metals:
+    df_table.rename(columns={m: f"Metal {m} NO₃"}, inplace=True)
 
 st.table(df_table)
 
@@ -61,17 +65,58 @@ else:
     agent_answer = st.radio("Your answer", metals, key="oxidising")
 
 # ------------------------------------
-# Question 3: Multiple Choice Question
+# Question 3: Multiple Choice Question (MCQ)
 # ------------------------------------
+# Define a question bank with varied questions.
+mcq_bank = [
+    {
+        "question": "When a metal is added to a solution of another metal's nitrate, a displacement reaction occurs if and only if:",
+        "options": [
+            "The added metal is more reactive than the metal ion in solution.",
+            "The added metal is less reactive than the metal ion in solution.",
+            "Both metals have the same reactivity.",
+            "The nitrate ion acts as a reducing agent."
+        ],
+        "correct": "The added metal is more reactive than the metal ion in solution."
+    },
+    {
+        "question": "If metal X displaces metal Y from its nitrate solution, which statement is true?",
+        "options": [
+            "Metal X is more reactive than metal Y.",
+            "Metal X is less reactive than metal Y.",
+            "Metal X and metal Y have the same reactivity.",
+            "Metal Y is a stronger reducing agent than metal X."
+        ],
+        "correct": "Metal X is more reactive than metal Y."
+    },
+    {
+        "question": "Which statement best describes a displacement reaction between metals in nitrate solutions?",
+        "options": [
+            "A more reactive metal will replace a less reactive metal ion in solution.",
+            "A less reactive metal will replace a more reactive metal ion in solution.",
+            "Both metals form a precipitate.",
+            "No reaction occurs because the nitrate ion is inert."
+        ],
+        "correct": "A more reactive metal will replace a less reactive metal ion in solution."
+    },
+    {
+        "question": "What does it mean when you observe a 'Reaction' in the displacement table for a given pair of metals?",
+        "options": [
+            "The added metal is more reactive than the metal in the nitrate solution.",
+            "The added metal is less reactive than the metal in the nitrate solution.",
+            "The nitrate ion is reacting with both metals.",
+            "The metal in the nitrate solution is more reactive than the added metal."
+        ],
+        "correct": "The added metal is more reactive than the metal in the nitrate solution."
+    }
+]
+
+selected_mcq = random.choice(mcq_bank)
+
 st.subheader("Question 3: Multiple Choice")
 mcq_answer = st.radio(
-    "When a metal is added to a solution of another metal's nitrate, a displacement reaction occurs if and only if:",
-    options=[
-        "The added metal is more reactive than the metal ion in solution.",
-        "The added metal is less reactive than the metal ion in solution.",
-        "Both metals have the same reactivity.",
-        "The nitrate ion acts as a reducing agent."
-    ],
+    selected_mcq["question"],
+    options=selected_mcq["options"],
     key="mcq"
 )
 
@@ -112,11 +157,11 @@ if st.button("Submit Answers"):
             feedback.append(f"Oxidising Agent: Incorrect. The strongest oxidising agent is Metal {correct_agent}.")
     
     # Evaluate MCQ
-    if mcq_answer == "The added metal is more reactive than the metal ion in solution.":
+    if mcq_answer == selected_mcq["correct"]:
         feedback.append("MCQ: Correct!")
         score += 1
     else:
-        feedback.append("MCQ: Incorrect. The correct answer is: 'The added metal is more reactive than the metal ion in solution.'")
+        feedback.append(f"MCQ: Incorrect. The correct answer is: '{selected_mcq['correct']}'")
     
     st.subheader("Results")
     for msg in feedback:
