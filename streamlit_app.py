@@ -81,7 +81,18 @@ mcq_options = st.session_state.mcq_options
 # ---------------------------
 # Build the Displacement Reaction Table
 # ---------------------------
-# For each cell: if the row metal is more reactive than the column metal, show "Reaction"; otherwise, "No Reaction".
+# In this table:
+# - The rows represent the metals present in the nitrate solution.
+# - The columns (after renaming) represent the metals that are added (as their nitrate form).
+#
+# A displacement reaction occurs if the added metal (from the column) is more reactive
+# than the metal in the solution (from the row). Because a lower rank number indicates
+# higher reactivity, this condition is met when:
+#
+#     reactivity_ranks[row] > reactivity_ranks[col]
+#
+# That is, if the reactivity rank of the metal in the solution (row) is greater than
+# that of the added metal (column), then the added metal will displace the metal in solution.
 table_data = {}
 for row in metals:
     row_vals = []
@@ -96,8 +107,8 @@ for row in metals:
     table_data[row] = row_vals
 
 # Create a DataFrame:
-# - The first column lists the metal labels.
-# - The subsequent columns are titled "ANO₃", "BNO₃", etc.
+# - The first column (labeled "Metal") is taken from the index and represents the metals in solution.
+# - The other columns are renamed (e.g., "ANO₃", "BNO₃", etc.) to indicate the metal being added.
 df_table = pd.DataFrame(table_data, index=metals)
 df_table.reset_index(inplace=True)
 df_table.rename(columns={"index": "Metal"}, inplace=True)
@@ -105,6 +116,7 @@ for m in metals:
     df_table.rename(columns={m: f"{m}NO₃"}, inplace=True)
 
 st.table(df_table)
+
 
 # ---------------------------
 # Question 1: Rank the Metals
