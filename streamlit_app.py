@@ -151,26 +151,42 @@ mcq_answer = st.radio(
 )
 
 # ---------------------------
-# Question 4: Displacement Reaction Equation (MCQ)
+# Question 4: Displacement Reaction Equation (MCQ) Based on the Table
 # ---------------------------
-st.subheader("Question 4: Identify the Correct Displacement Reaction Equation")
-st.write("""
-Consider a displacement reaction where a more reactive metal **A** displaces a less reactive metal **B** from its nitrate solution.
-Which of the following is the correctly balanced chemical equation for this reaction?
+# Generate the reaction question only once using session state.
+if "eq_options" not in st.session_state:
+    # Create a list of valid pairs (row, col) where a displacement reaction occurs
+    valid_pairs = [(row, col) for row in metals for col in metals if row != col and reactivity_ranks[row] > reactivity_ranks[col]]
+    # Randomly choose a valid pair.
+    solution_metal, added_metal = random.choice(valid_pairs)
+    st.session_state.solution_metal = solution_metal
+    st.session_state.added_metal = added_metal
+
+    # Construct the correct equation for the reaction:
+    # When a more reactive metal (added_metal) is added to a solution containing a less reactive metal (solution_metal),
+    # the added metal displaces the solution metal:
+    correct_eq = f"{added_metal}(s) + {solution_metal}NO₃(aq) → {added_metal}NO₃(aq) + {solution_metal}(s)"
+
+    # Generate distractor equations with common errors:
+    distractor1 = f"{solution_metal}(s) + {added_metal}NO₃(aq) → {solution_metal}NO₃(aq) + {added_metal}(s)"  # Reaction written in reverse.
+    distractor2 = f"{added_metal}(s) + {solution_metal}NO₃(aq) → {solution_metal}NO₃(aq) + {added_metal}NO₃(aq)"  # Incorrect nitrate placement.
+    distractor3 = f"{added_metal}(s) + {solution_metal}(s) → {added_metal}NO₃(aq) + {solution_metal}NO₃(aq)"  # Missing nitrate in one reactant.
+
+    eq_options = [correct_eq, distractor1, distractor2, distractor3]
+    random.shuffle(eq_options)
+    st.session_state.eq_options = eq_options
+    st.session_state.correct_eq = correct_eq
+
+# Retrieve the stored reaction details.
+added_metal = st.session_state.added_metal
+solution_metal = st.session_state.solution_metal
+
+st.subheader("Question 4: Identify the Correct Reaction Based on the Displacement Reaction Table")
+st.write(f"""
+Based on the displacement reaction table above, a reaction occurs when a more reactive metal displaces a less reactive metal from its nitrate solution.
+Below, select the correctly balanced chemical equation for the reaction in which **{added_metal}** displaces **{solution_metal}**.
 """)
-
-# Define the correct equation and generate distractors with common mistakes:
-correct_eq = "A(s) + BNO₃(aq) → ANO₃(aq) + B(s)"
-# Distractor 1: Reaction written in reverse.
-distractor1 = "B(s) + ANO₃(aq) → A(s) + BNO₃(aq)"
-# Distractor 2: Nitrate group attached to the wrong metal in the products.
-distractor2 = "A(s) + BNO₃(aq) → BNO₃(aq) + ANO₃(aq)"
-# Distractor 3: Reactants are both metals (ignoring the nitrate component).
-distractor3 = "A(s) + B(s) → ANO₃(aq) + BNO₃(aq)"
-
-eq_options = [correct_eq, distractor1, distractor2, distractor3]
-random.shuffle(eq_options)
-selected_eq = st.radio("Select the correctly balanced equation:", eq_options, key="eq")
+selected_eq = st.radio("Select the correctly balanced equation:", st.session_state.eq_options, key="eq")
 
 # ---------------------------
 # Submission and Evaluation
@@ -219,11 +235,11 @@ if st.button("Submit Answers"):
         feedback.append(f"MCQ: Incorrect. The correct answer is: '{selected_mcq['correct']}'")
     
     # Evaluate Equation MCQ (Question 4)
-    if selected_eq == correct_eq:
+    if selected_eq == st.session_state.correct_eq:
         feedback.append("Equation: Correct!")
         score += 1
     else:
-        feedback.append(f"Equation: Incorrect. The correct equation is:\n\n**{correct_eq}**")
+        feedback.append(f"Equation: Incorrect. The correct equation is:\n\n**{st.session_state.correct_eq}**")
     
     st.subheader("Results")
     for msg in feedback:
