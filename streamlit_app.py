@@ -192,6 +192,7 @@ selected_eq = st.radio("Reaction Equation:", st.session_state.eq_options, key="e
 # Submission and Evaluation
 # ---------------------------
 if st.button("Submit Answers"):
+    st.session_state["submitted"] = True  # Flag that answers have been submitted
     score = 0
     feedback = []
     
@@ -241,3 +242,18 @@ if st.button("Submit Answers"):
     for msg in feedback:
         st.write(msg)
     st.write(f"Total Score: {score} out of 4")
+
+# ---------------------------
+# Restart Quiz Button (shown only after submission)
+# ---------------------------
+if st.session_state.get("submitted", False):
+    if st.button("Restart Quiz"):
+        # Clear the keys used in the quiz to force new randomization.
+        keys_to_clear = [
+            "reactivity_ranks", "question_type", "selected_mcq", "mcq_options",
+            "eq_options", "correct_eq", "solution_metal", "added_metal", "submitted"
+        ]
+        for key in keys_to_clear:
+            if key in st.session_state:
+                del st.session_state[key]
+        st.experimental_rerun()
