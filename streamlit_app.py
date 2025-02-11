@@ -7,67 +7,19 @@ st.title("Metal Reactivity Test")
 # List of metals
 metals = ["A", "B", "C", "D"]
 
-# Randomize the underlying reactivity order
-random_order = metals.copy()
-random.shuffle(random_order)
-# Lower rank number = more reactive (1 = most reactive, 4 = least reactive)
-reactivity_ranks = {metal: random_order.index(metal) + 1 for metal in metals}
-
-# Build the displacement reaction table.
-# For each cell: if row metal is more reactive than column metal → "Reaction", else "No Reaction"
-table_data = {}
-for row in metals:
-    row_vals = []
-    for col in metals:
-        if row == col:
-            row_vals.append("—")
-        else:
-            if reactivity_ranks[row] < reactivity_ranks[col]:
-                row_vals.append("Reaction")
-            else:
-                row_vals.append("No Reaction")
-    table_data[row] = row_vals
-
-# Create DataFrame with first column as "Metal" and subsequent columns as "Metal A NO₃", "Metal B NO₃", etc.
-df_table = pd.DataFrame(table_data, index=metals)
-df_table.reset_index(inplace=True)
-df_table.rename(columns={"index": "Metal"}, inplace=True)
-
-# Rename the other columns to include "NO₃"
-for m in metals:
-    df_table.rename(columns={m: f"Metal {m} NO₃"}, inplace=True)
-
-st.table(df_table)
-
 # ---------------------------
-# Question 1: Rank the Metals
+# Initialize Session State
 # ---------------------------
-st.subheader("Question 1: Rank the Metals by Reactivity")
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    rank1 = st.selectbox("Most reactive", metals, key="rank1")
-with col2:
-    rank2 = st.selectbox("2nd most reactive", metals, key="rank2")
-with col3:
-    rank3 = st.selectbox("3rd most reactive", metals, key="rank3")
-with col4:
-    rank4 = st.selectbox("Least reactive", metals, key="rank4")
+if "reactivity_ranks" not in st.session_state:
+    random_order = metals.copy()
+    random.shuffle(random_order)
+    # Lower rank number means more reactive (1 = most reactive)
+    st.session_state.reactivity_ranks = {metal: random_order.index(metal) + 1 for metal in metals}
 
-# ---------------------------------------------------------
-# Question 2: Strongest Reducing or Oxidising Agent (Random)
-# ---------------------------------------------------------
-question_type = random.choice(["reducing", "oxidising"])
-if question_type == "reducing":
-    st.subheader("Question 2: Identify the Strongest Reducing Agent")
-    agent_answer = st.radio("Your answer", metals, key="reducing")
-else:
-    st.subheader("Question 2: Identify the Strongest Oxidising Agent")
-    agent_answer = st.radio("Your answer", metals, key="oxidising")
+if "question_type" not in st.session_state:
+    st.session_state.question_type = random.choice(["reducing", "oxidising"])
 
-# ------------------------------------
-# Question 3: Multiple Choice Question (MCQ)
-# ------------------------------------
-# Define a question bank with varied questions.
+# Define the MCQ question bank
 mcq_bank = [
     {
         "question": "When a metal is added to a solution of another metal's nitrate, a displacement reaction occurs if and only if:",
@@ -111,8 +63,67 @@ mcq_bank = [
     }
 ]
 
-selected_mcq = random.choice(mcq_bank)
+if "selected_mcq" not in st.session_state:
+    st.session_state.selected_mcq = random.choice(mcq_bank)
 
+# Retrieve stored values
+reactivity_ranks = st.session_state.reactivity_ranks
+question_type = st.session_state.question_type
+selected_mcq = st.session_state.selected_mcq
+
+# ---------------------------
+# Build the Displacement Reaction Table
+# ---------------------------
+# For each cell: if the row metal is more reactive than the column metal, show "Reaction"; otherwise, "No Reaction".
+table_data = {}
+for row in metals:
+    row_vals = []
+    for col in metals:
+        if row == col:
+            row_vals.append("—")
+        else:
+            if reactivity_ranks[row] < reactivity_ranks[col]:
+                row_vals.append("Reaction")
+            else:
+                row_vals.append("No Reaction")
+    table_data[row] = row_vals
+
+# Create a DataFrame where the first column shows the metal labels, and the subsequent columns are titled "Metal A NO₃", "Metal B NO₃", etc.
+df_table = pd.DataFrame(table_data, index=metals)
+df_table.reset_index(inplace=True)
+df_table.rename(columns={"index": "Metal"}, inplace=True)
+for m in metals:
+    df_table.rename(columns={m: f"Metal {m} NO₃"}, inplace=True)
+
+st.table(df_table)
+
+# ---------------------------
+# Question 1: Rank the Metals
+# ---------------------------
+st.subheader("Question 1: Rank the Metals by Reactivity")
+col1, col2, col3, col4 = st.columns(4)
+with col1:
+    rank1 = st.selectbox("Most reactive", metals, key="rank1")
+with col2:
+    rank2 = st.selectbox("2nd most reactive", metals, key="rank2")
+with col3:
+    rank3 = st.selectbox("3rd most reactive", metals, key="rank3")
+with col4:
+    rank4 = st.selectbox("Least reactive", metals, key="rank4")
+
+# ---------------------------
+# Question 2: Strongest Reducing or Oxidising Agent
+# ---------------------------
+if question_type == "reducing":
+    st.subheader("Question 2: Identify the Strongest Reducing Agent")
+    agent_answer = st.radio("Your answer", metals, key="reducing")
+else:
+    st.subheader("Question 2: Identify the Strongest Oxidising Agent")
+    agent_answer = st.radio("Your answer", metals, key="oxidising")
+
+# ---------------------------
+# Question 3: Multiple Choice Question (MCQ)
+# ---------------------------
 st.subheader("Question 3: Multiple Choice")
 mcq_answer = st.radio(
     selected_mcq["question"],
@@ -120,9 +131,9 @@ mcq_answer = st.radio(
     key="mcq"
 )
 
-# ---------------
-# Submission
-# ---------------
+# ---------------------------
+# Submission and Evaluation
+# ---------------------------
 if st.button("Submit Answers"):
     score = 0
     feedback = []
