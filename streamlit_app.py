@@ -89,7 +89,7 @@ for row in metals:
         if row == col:
             row_vals.append("—")
         else:
-            if reactivity_ranks[row] < reactivity_ranks[col]:
+            if reactivity_ranks[row] > reactivity_ranks[col]:
                 row_vals.append("Reaction")
             else:
                 row_vals.append("No Reaction")
