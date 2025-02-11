@@ -66,7 +66,7 @@ mcq_bank = [
 if "selected_mcq" not in st.session_state:
     st.session_state.selected_mcq = random.choice(mcq_bank)
 
-# Randomize the order of MCQ options and store it in session state.
+# Randomize the order of MCQ options and store in session state.
 if "mcq_options" not in st.session_state:
     mcq_options = st.session_state.selected_mcq["options"].copy()
     random.shuffle(mcq_options)
@@ -82,17 +82,13 @@ mcq_options = st.session_state.mcq_options
 # Build the Displacement Reaction Table
 # ---------------------------
 # In this table:
-# - The rows represent the metals present in the nitrate solution.
-# - The columns (after renaming) represent the metals that are added (as their nitrate form).
+# - Rows represent metals in the nitrate solution.
+# - Columns (after renaming) represent the metals added (as their nitrate form).
 #
-# A displacement reaction occurs if the added metal (from the column) is more reactive
-# than the metal in the solution (from the row). Because a lower rank number indicates
-# higher reactivity, this condition is met when:
-#
-#     reactivity_ranks[row] > reactivity_ranks[col]
-#
-# That is, if the reactivity rank of the metal in the solution (row) is greater than
-# that of the added metal (column), then the added metal will displace the metal in solution.
+# A displacement reaction occurs if the metal added is more reactive than the metal in solution.
+# (Recall: a lower reactivity rank means more reactive.)
+# Thus, a reaction occurs when:
+#     reactivity_ranks[metal_in_solution] > reactivity_ranks[metal_added]
 table_data = {}
 for row in metals:
     row_vals = []
@@ -107,8 +103,8 @@ for row in metals:
     table_data[row] = row_vals
 
 # Create a DataFrame:
-# - The first column (labeled "Metal") is taken from the index and represents the metals in solution.
-# - The other columns are renamed (e.g., "ANO₃", "BNO₃", etc.) to indicate the metal being added.
+# - The first column ("Metal") is from the index (metals in solution).
+# - The other columns are renamed (e.g., "ANO₃", "BNO₃", etc.) to indicate the metal added.
 df_table = pd.DataFrame(table_data, index=metals)
 df_table.reset_index(inplace=True)
 df_table.rename(columns={"index": "Metal"}, inplace=True)
@@ -124,7 +120,6 @@ st.subheader("Question 1: Rank the Metals by Reactivity")
 labels = ["Most reactive", "2nd most reactive", "3rd most reactive", "Least reactive"]
 cols = st.columns(4)
 student_ranking = []
-
 for i, label in enumerate(labels):
     with cols[i]:
         choice = st.selectbox(label, metals, key=f"rank{i+1}")
@@ -144,49 +139,54 @@ else:
 # Question 3: Multiple Choice Question (MCQ)
 # ---------------------------
 st.subheader("Question 3: Multiple Choice")
-mcq_answer = st.radio(
-    selected_mcq["question"],
-    options=mcq_options,
-    key="mcq"
-)
+mcq_answer = st.radio(selected_mcq["question"], options=mcq_options, key="mcq")
 
 # ---------------------------
-# Question 4: Displacement Reaction Equation (MCQ) Based on the Table
+# Question 4: Reaction Equation (MCQ)
 # ---------------------------
-# Generate the reaction question only once using session state.
+# This question is generated only once and stored in session state.
+# One valid reaction is generated based on the displacement table.
+# The distractors include:
+# - The reverse of the valid reaction.
+# - An equation based on a pair that will not react.
+# - An equation with an incorrect nitrate placement.
 if "eq_options" not in st.session_state:
-    # Create a list of valid pairs (row, col) where a displacement reaction occurs
-    valid_pairs = [(row, col) for row in metals for col in metals if row != col and reactivity_ranks[row] > reactivity_ranks[col]]
-    # Randomly choose a valid pair.
+    # Choose a valid pair where a reaction occurs:
+    valid_pairs = [(sol, add) for sol in metals for add in metals 
+                   if sol != add and reactivity_ranks[sol] > reactivity_ranks[add]]
+    # valid pair: (solution_metal, added_metal) so that added_metal displaces solution_metal
     solution_metal, added_metal = random.choice(valid_pairs)
     st.session_state.solution_metal = solution_metal
     st.session_state.added_metal = added_metal
 
-    # Construct the correct equation for the reaction:
-    # When a more reactive metal (added_metal) is added to a solution containing a less reactive metal (solution_metal),
-    # the added metal displaces the solution metal:
+    # Correct reaction equation
     correct_eq = f"{added_metal}(s) + {solution_metal}NO₃(aq) → {added_metal}NO₃(aq) + {solution_metal}(s)"
-
-    # Generate distractor equations with common errors:
-    distractor1 = f"{solution_metal}(s) + {added_metal}NO₃(aq) → {solution_metal}NO₃(aq) + {added_metal}(s)"  # Reaction written in reverse.
-    distractor2 = f"{added_metal}(s) + {solution_metal}NO₃(aq) → {solution_metal}NO₃(aq) + {added_metal}NO₃(aq)"  # Incorrect nitrate placement.
-    distractor3 = f"{added_metal}(s) + {solution_metal}(s) → {added_metal}NO₃(aq) + {solution_metal}NO₃(aq)"  # Missing nitrate in one reactant.
-
+    
+    # Distractor 1: The reverse reaction (invalid)
+    distractor1 = f"{solution_metal}(s) + {added_metal}NO₃(aq) → {solution_metal}NO₃(aq) + {added_metal}(s)"
+    
+    # Distractor 2: An equation based on an invalid pair (a pair that will not react)
+    invalid_pairs = [(sol, add) for sol in metals for add in metals 
+                     if sol != add and not (reactivity_ranks[sol] > reactivity_ranks[add])]
+    # Exclude the reversed valid pair if present
+    invalid_pairs = [pair for pair in invalid_pairs if pair != (added_metal, solution_metal)]
+    if invalid_pairs:
+        sol_invalid, add_invalid = random.choice(invalid_pairs)
+        distractor2 = f"{add_invalid}(s) + {sol_invalid}NO₃(aq) → {add_invalid}NO₃(aq) + {sol_invalid}(s)"
+    else:
+        distractor2 = f"{solution_metal}(s) + {added_metal}NO₃(aq) → {solution_metal}(s) + {added_metal}NO₃(aq)"
+    
+    # Distractor 3: Incorrect nitrate placement for the valid pair
+    distractor3 = f"{added_metal}(s) + {solution_metal}NO₃(aq) → {solution_metal}NO₃(aq) + {added_metal}NO₃(aq)"
+    
     eq_options = [correct_eq, distractor1, distractor2, distractor3]
     random.shuffle(eq_options)
     st.session_state.eq_options = eq_options
     st.session_state.correct_eq = correct_eq
 
-# Retrieve the stored reaction details.
-added_metal = st.session_state.added_metal
-solution_metal = st.session_state.solution_metal
-
-st.subheader("Question 4: Identify the Correct Reaction Based on the Displacement Reaction Table")
-st.write(f"""
-Based on the displacement reaction table above, a reaction occurs when a more reactive metal displaces a less reactive metal from its nitrate solution.
-Below, select the correctly balanced chemical equation for the reaction in which **{added_metal}** displaces **{solution_metal}**.
-""")
-selected_eq = st.radio("Select the correctly balanced equation:", st.session_state.eq_options, key="eq")
+st.subheader("Question 4: Select the Reaction That Will Occur")
+st.write("Select the correctly balanced chemical equation:")
+selected_eq = st.radio("Reaction Equation:", st.session_state.eq_options, key="eq")
 
 # ---------------------------
 # Submission and Evaluation
@@ -199,8 +199,6 @@ if st.button("Submit Answers"):
     if len(set(student_ranking)) < 4:
         feedback.append("Ranking: Please ensure you select a unique metal for each position.")
     else:
-        # Correct ranking: metals sorted in ascending order of their reactivity rank 
-        # (lowest rank number = most reactive)
         correct_ranking = sorted(metals, key=lambda x: reactivity_ranks[x])
         if student_ranking == correct_ranking:
             feedback.append("Ranking: Correct!")
@@ -211,7 +209,6 @@ if st.button("Submit Answers"):
     
     # Evaluate Reducing / Oxidising Agent (Question 2)
     if question_type == "reducing":
-        # The strongest reducing agent is the most reactive (lowest rank number)
         correct_agent = min(metals, key=lambda x: reactivity_ranks[x])
         if agent_answer == correct_agent:
             feedback.append("Reducing Agent: Correct!")
@@ -219,7 +216,6 @@ if st.button("Submit Answers"):
         else:
             feedback.append(f"Reducing Agent: Incorrect. The strongest reducing agent is Metal {correct_agent}.")
     else:
-        # The strongest oxidising agent is the least reactive (highest rank number)
         correct_agent = max(metals, key=lambda x: reactivity_ranks[x])
         if agent_answer == correct_agent:
             feedback.append("Oxidising Agent: Correct!")
@@ -234,12 +230,12 @@ if st.button("Submit Answers"):
     else:
         feedback.append(f"MCQ: Incorrect. The correct answer is: '{selected_mcq['correct']}'")
     
-    # Evaluate Equation MCQ (Question 4)
+    # Evaluate Reaction Equation (Question 4)
     if selected_eq == st.session_state.correct_eq:
-        feedback.append("Equation: Correct!")
+        feedback.append("Reaction Equation: Correct!")
         score += 1
     else:
-        feedback.append(f"Equation: Incorrect. The correct equation is:\n\n**{st.session_state.correct_eq}**")
+        feedback.append(f"Reaction Equation: Incorrect. The correct equation is:\n\n**{st.session_state.correct_eq}**")
     
     st.subheader("Results")
     for msg in feedback:
