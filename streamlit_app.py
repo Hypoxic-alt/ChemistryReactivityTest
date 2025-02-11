@@ -106,12 +106,6 @@ for m in metals:
 
 st.table(df_table)
 
-# Print the reactivity order beneath the table for debugging
-st.write("Reactivity Ranks:", reactivity_ranks)
-sorted_metals = sorted(metals, key=lambda x: reactivity_ranks[x])
-reactivity_order_str = " > ".join(sorted_metals)
-st.write("Reactivity Order (most reactive to least reactive):", reactivity_order_str)
-
 # ---------------------------
 # Question 1: Rank the Metals
 # ---------------------------
