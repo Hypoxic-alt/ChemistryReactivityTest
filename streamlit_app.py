@@ -152,7 +152,8 @@ if st.button("Submit Answers"):
     if len(set(student_ranking)) < 4:
         feedback.append("Ranking: Please ensure you select a unique metal for each position.")
     else:
-        correct_ranking = sorted(metals, key=lambda x: reactivity_ranks[x])
+        # FIX: Sort in descending order so the most reactive metal (lowest rank number) comes first.
+        correct_ranking = sorted(metals, key=lambda x: reactivity_ranks[x], reverse=True)
         if student_ranking == correct_ranking:
             feedback.append("Ranking: Correct!")
             score += 1
