@@ -110,15 +110,14 @@ st.table(df_table)
 # Question 1: Rank the Metals
 # ---------------------------
 st.subheader("Question 1: Rank the Metals by Reactivity")
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    rank1 = st.selectbox("Most reactive", metals, key="rank1")
-with col2:
-    rank2 = st.selectbox("2nd most reactive", metals, key="rank2")
-with col3:
-    rank3 = st.selectbox("3rd most reactive", metals, key="rank3")
-with col4:
-    rank4 = st.selectbox("Least reactive", metals, key="rank4")
+labels = ["Most reactive", "2nd most reactive", "3rd most reactive", "Least reactive"]
+cols = st.columns(4)
+student_ranking = []
+
+for i, label in enumerate(labels):
+    with cols[i]:
+        choice = st.selectbox(label, metals, key=f"rank{i+1}")
+        student_ranking.append(choice)
 
 # ---------------------------
 # Question 2: Strongest Reducing or Oxidising Agent
@@ -148,12 +147,12 @@ if st.button("Submit Answers"):
     feedback = []
     
     # Evaluate Ranking
-    student_ranking = [rank1, rank2, rank3, rank4]
     if len(set(student_ranking)) < 4:
         feedback.append("Ranking: Please ensure you select a unique metal for each position.")
     else:
-        # FIX: Sort in descending order so the most reactive metal (lowest rank number) comes first.
-        correct_ranking = sorted(metals, key=lambda x: reactivity_ranks[x], reverse=True)
+        # Correct ranking: metals sorted in ascending order of their reactivity rank 
+        # (lowest rank number = most reactive)
+        correct_ranking = sorted(metals, key=lambda x: reactivity_ranks[x])
         if student_ranking == correct_ranking:
             feedback.append("Ranking: Correct!")
             score += 1
@@ -163,14 +162,16 @@ if st.button("Submit Answers"):
     
     # Evaluate Reducing / Oxidising Agent Question
     if question_type == "reducing":
-        correct_agent = max(metals, key=lambda x: reactivity_ranks[x])
+        # The strongest reducing agent is the most reactive (lowest rank number)
+        correct_agent = min(metals, key=lambda x: reactivity_ranks[x])
         if agent_answer == correct_agent:
             feedback.append("Reducing Agent: Correct!")
             score += 1
         else:
             feedback.append(f"Reducing Agent: Incorrect. The strongest reducing agent is Metal {correct_agent}.")
     else:
-        correct_agent = min(metals, key=lambda x: reactivity_ranks[x])
+        # The strongest oxidising agent is the least reactive (highest rank number)
+        correct_agent = max(metals, key=lambda x: reactivity_ranks[x])
         if agent_answer == correct_agent:
             feedback.append("Oxidising Agent: Correct!")
             score += 1
