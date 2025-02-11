@@ -163,14 +163,14 @@ if st.button("Submit Answers"):
     
     # Evaluate Reducing / Oxidising Agent Question
     if question_type == "reducing":
-        correct_agent = min(metals, key=lambda x: reactivity_ranks[x])
+        correct_agent = max(metals, key=lambda x: reactivity_ranks[x])
         if agent_answer == correct_agent:
             feedback.append("Reducing Agent: Correct!")
             score += 1
         else:
             feedback.append(f"Reducing Agent: Incorrect. The strongest reducing agent is Metal {correct_agent}.")
     else:
-        correct_agent = max(metals, key=lambda x: reactivity_ranks[x])
+        correct_agent = min(metals, key=lambda x: reactivity_ranks[x])
         if agent_answer == correct_agent:
             feedback.append("Oxidising Agent: Correct!")
             score += 1
