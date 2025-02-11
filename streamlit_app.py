@@ -256,4 +256,4 @@ if st.session_state.get("submitted", False):
         for key in keys_to_clear:
             if key in st.session_state:
                 del st.session_state[key]
-        st.experimental_rerun()
+        st.rerun()
